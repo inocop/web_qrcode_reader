@@ -105,3 +105,5 @@ dist
 
 
 build_opencv/opencv
+build_opencv/opencv_contrib
+build_opencv/build_wasm

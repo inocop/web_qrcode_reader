@@ -29,12 +29,21 @@
     }, false);
     imgElement.onload = function () {
       let src = opencv.imread(imgElement);
-      let dst = new opencv.Mat();
-      opencv.cvtColor(src, dst, opencv.COLOR_RGBA2GRAY, 0);
-      opencv.imshow('canvasOutput', dst);
+
+      // let dst = new opencv.Mat();
+      // opencv.cvtColor(src, dst, opencv.COLOR_RGBA2GRAY, 0);
+      // opencv.imshow('canvasOutput', dst);
+
+      let qr = new opencv.QRCodeDetector();
+      let result = qr.detectAndDecode(src);
+      if (result) {
+        alert(result);
+      }
+
       src.delete();
-      dst.delete();
+      // dst.delete();
     };
+
     function onOpenCvReady() {
       cv.then((data) => {
         opencv = data

@@ -1,68 +1,74 @@
 <!DOCTYPE html>
 <html>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Hello OpenCV.js</title>
+  </head>
 
-<head>
-  <meta charset="utf-8">
-  <meta http-equiv='X-UA-Compatible' content='IE=edge'>
-  <meta name='viewport' content='width=device-width, initial-scale=1'>
-  <title>Hello OpenCV.js</title>
-</head>
+  <body>
+    <video id="videoInput" width="1600px" height="900px"></video>
+    <canvas id="canvasOutput" width="1600px" height="900px"></canvas>
+    <script>
+      function onOpenCvReady() {
+        cv.then((data) => {
+          opencv = data;
 
-<body>
-  <video id="videoInput" width="400" height="400"></video>
-  <canvas id="canvasOutput" width="400" height="400"></canvas>
-  <script>
-    function onOpenCvReady() {
-      cv.then((data) => {
-        cv = data
+          let streaming = false;
+          const video = document.getElementById("videoInput"); // video is the id of video tag
+          navigator.mediaDevices
+            .getUserMedia({
+              video: true,
+              audio: false,
+            })
+            .then(function (stream) {
+              video.srcObject = stream;
+              video.play();
+              streaming = true;
+            })
+            .catch(function (err) {
+              console.log("An error occurred! " + err);
+            });
 
-        let streaming = false
-        let video = document.getElementById("videoInput"); // video is the id of video tag
-        navigator.mediaDevices.getUserMedia({ video: true, audio: false })
-        .then(function(stream) {
-            video.srcObject = stream;
-            video.play();
-            streaming = true
-        })
-        .catch(function(err) {
-            console.log("An error occurred! " + err);
-        });
+          let src = new opencv.Mat(video.height, video.width, opencv.CV_8UC4);
+          let dst = new opencv.Mat(video.height, video.width, opencv.CV_8UC1);
+          let cap = new opencv.VideoCapture(video);
+          let qr = new opencv.QRCodeDetector();
+          // let qr = new opencv.WeChatQRCode();
 
-
-        let src = new cv.Mat(video.height, video.width, cv.CV_8UC4);
-        let dst = new cv.Mat(video.height, video.width, cv.CV_8UC1);
-        let cap = new cv.VideoCapture(video);
-
-        const FPS = 30;
-        function processVideo() {
+          const FPS = 30;
+          function processVideo() {
             try {
-                if (!streaming) {
-                    // clean and stop.
-                    // src.delete();
-                    // dst.delete();
-                    setTimeout(processVideo, 0);
-                    return;
-                }
-                let begin = Date.now();
+              let begin = Date.now();
+
+              if (streaming) {
                 // start processing.
                 cap.read(src);
-                cv.cvtColor(src, dst, cv.COLOR_RGBA2GRAY);
-                cv.imshow('canvasOutput', dst);
-                // schedule the next one.
-                let delay = 1000/FPS - (Date.now() - begin);
-                setTimeout(processVideo, delay);
+                opencv.cvtColor(src, dst, opencv.COLOR_RGBA2GRAY);
+                opencv.imshow('canvasOutput', dst);
+
+                let result = qr.detectAndDecode(dst);
+                if (result) {
+                  alert(result);
+                }
+                console.log('result')
+              }
+
+              // schedule the next one.
+              let delay = 1000 / FPS - (Date.now() - begin);
+              setTimeout(processVideo, delay);
             } catch (err) {
-                console.log(err)
-                // utils.printError(err);
+              console.log(err);
+              // utils.printError(err);
             }
-        };
+          }
 
-        // schedule the first one.
-        setTimeout(processVideo, 0);
-      })
-    }
-  </script>
-  <script async src="../js/opencv.js" onload="onOpenCvReady();" type="text/javascript"></script>
-</body>
-
+          // schedule the first one.
+          setTimeout(processVideo, 0);
+        });
+      }
+    </script>
+    <script async src="../js/opencv.js" onload="onOpenCvReady();" type="text/javascript"></script>
+  </body>
 </html>
